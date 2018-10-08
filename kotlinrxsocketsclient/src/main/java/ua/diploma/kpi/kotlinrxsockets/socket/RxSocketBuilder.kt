@@ -1,5 +1,6 @@
-package ua.diploma.kpi.kotlinrxsockets
+package ua.diploma.kpi.kotlinrxsockets.socket
 
+import com.google.gson.Gson
 import io.socket.client.IO
 
 /**
@@ -29,10 +30,11 @@ class RxSocketBuilder{
     var port: Int = 0
     var namespace: String = ""
     var options: IO.Options? = null
+    var gson: Gson = Gson()
 
     fun options(block: OptionsBuilder.() -> Unit) {
         options = OptionsBuilder().apply(block).build()
     }
 
-    fun build() = RxSocket(hostIp, port, namespace, options)
+    fun build() = RxSocket(hostIp, port, namespace, options, gson)
 }

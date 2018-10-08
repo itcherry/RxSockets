@@ -1,4 +1,4 @@
-package ua.diploma.kpi.kotlinrxsockets
+package ua.diploma.kpi.kotlinrxsockets.socket
 
 import io.socket.client.IO
 

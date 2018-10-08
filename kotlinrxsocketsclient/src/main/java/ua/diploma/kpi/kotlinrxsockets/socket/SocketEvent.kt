@@ -1,4 +1,4 @@
-package ua.diploma.kpi.kotlinrxsockets
+package ua.diploma.kpi.kotlinrxsockets.socket
 
 /**
  * Copyright 2018. Andrii Chernysh
