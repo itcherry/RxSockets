@@ -25,18 +25,19 @@ import io.socket.client.IO
  *         Developed by <u>Transcendensoft</u>
  */
 class OptionsBuilder {
-    var mutiplex: Boolean = true
     var forceNew: Boolean = false
+
     var query: String = ""
+
     var reconnection: Boolean = true
     var reconnectionAttempts: Int = 0
-    var reconnectionDelay: Long = 0L
-    var reconnectionDelayMax: Long = 0L
+    var reconnectionDelay: Long = 1000L
+    var reconnectionDelayMax: Long = 5000L
     var timeout: Long = 20000L
+    var randomizationFactor = 0.5
 
     fun build(): IO.Options {
         val options = IO.Options()
-        options.multiplex = mutiplex
         options.forceNew = forceNew
         options.query = query
         options.reconnection = reconnection
@@ -44,7 +45,10 @@ class OptionsBuilder {
         options.reconnectionDelay = reconnectionDelay
         options.reconnectionDelayMax = reconnectionDelayMax
         options.timeout = timeout
-
+        options.randomizationFactor = randomizationFactor
+        /*                        ...                       */
+        /* Встановлення всіх визначених полів класу Options */
+        /*                        ...                       */
         return options
     }
 }

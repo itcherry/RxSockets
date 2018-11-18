@@ -1,5 +1,6 @@
 package ua.diploma.kpi.rxsockets
 
+import android.R
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -9,7 +10,17 @@ class MainActivity : AppCompatActivity() {
     private val socket = createRxSocket {
         hostIp = "http://176.36.146.229"
         port = 9092
-        namespace = "login"
+        gson = Gson()
+        namespace = "DHT22"
+        options {
+            forceNew = false
+            reconnection = true
+            reconnectionAttempts = 3
+            reconnectionDelay = 1000
+            reconnectionDelayMax = 10000
+            randomizationFactor = 0.3
+            timeout = 5000
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +54,8 @@ class MainActivity : AppCompatActivity() {
                 .subscribe {
                     Log.d("TAG", "Login result: $it")
                 }
+
+        socket.sendData("Diploma", "NTUU KPI")
 
         socket.connect()
     }

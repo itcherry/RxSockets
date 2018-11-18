@@ -3,10 +3,10 @@ package ua.diploma.kpi.kotlinrxsockets.socket
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
-import io.reactivex.*
+import io.reactivex.BackpressureStrategy
+import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.internal.subscriptions.ArrayCompositeSubscription
 import io.socket.client.IO
 import io.socket.client.Socket
 import io.socket.emitter.Emitter
@@ -82,7 +82,7 @@ class RxSocket(hostIp: String, port: Int,
         }
     }
 
-    fun <T> sendData(eventName: String, data: T){
+    fun <T> sendData(eventName: String, vararg data: T){
         if (socket.connected()) {
             socket.emit(eventName, data);
         }
