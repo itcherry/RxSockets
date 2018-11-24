@@ -3,4 +3,33 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+
+    <color name="textPrimary">#212121</color>
+    <color name="textSecondary">#BDBDBD</color>
+    <color name="textSecondaryDark">#757575</color>
+    <color name="textSecondaryLight">#E0E0E0</color>
+    <color name="textWhite">#FFFFFF</color>
+    <color name="textRed">#D32F2F</color>
+    <color name="textDarkRed">#AD2201</color>
+    <color name="textDisabled">#55000000</color>
+
+    <color name="google_green">#34A854</color>
+    <color name="google_yellow">#FABC05</color>
+    <color name="google_blue">#4185F4</color>
+    <color name="google_red">#EA4235</color>
+    <color name="google_dark_green">#4c8c4a</color>
+    <color name="invite_fab_disabled">#bb34a853</color>
+    <color name="brown_light">#895548</color>
+    <color name="brown_dark">#735346</color>
+    <color name="google_dark_yellow">#ECB611</color>
+    <color name="google_dark_red">#B71C1C</color>
+    <color name="google_dark_blue">#3D7AAD</color>
+    <color name="pink_light">#ED85B8</color>
+    <color name="pink_dark">#DC7EAB</color>
+    <color name="orange_light">#F98D10</color>
+    <color name="orange_dark">#E78513</color>
+    <color name="purple_dark">#673AB7</color>
+    <color name="purple_light">#9575CD</color>
+    <color name="teal_dark">#26A69A</color>
+    <color name="teal_light">#80CBC4</color>
 </resources>

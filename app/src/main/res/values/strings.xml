@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">RxSockets</string>
+    <string name="title1">Національний Технічний Університет України \"Київський Політехнічний Інститут імені Ігоря Сікорського\"</string>
+    <string name="title2">Приклад використання програмної бібліотеки обміну даними між процесами</string>
+    <string name="btn_enable_light">Увімкнути світло</string>
+    <string name="btn_disable_light">Вимкнути світло</string>
+
+    <string name="socket_state_connected">З\'єднання встановлено</string>
+    <string name="socket_state_connecting">Відбувається встановлення з\'єднання</string>
+    <string name="socket_state_reconnecting">Відбувається повторне встановлення з\'єднання</string>
+    <string name="socket_state_disconnected">З\'єднання розірвано</string>
+    <string name="socket_state_error">Помилка з\'єднання</string>
 </resources>

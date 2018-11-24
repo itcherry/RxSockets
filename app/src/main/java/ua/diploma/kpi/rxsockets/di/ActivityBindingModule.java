@@ -19,6 +19,7 @@ import dagger.Module;
 import dagger.android.ContributesAndroidInjector;
 import ua.diploma.kpi.rxsockets.di.scope.ActivityScope;
 import ua.diploma.kpi.rxsockets.presentation.MainActivity;
+import ua.diploma.kpi.rxsockets.presentation.MainActivityModule;
 
 /**
  * Dagger-Android module that binds all needed activities
@@ -28,6 +29,6 @@ import ua.diploma.kpi.rxsockets.presentation.MainActivity;
 @Module
 public interface ActivityBindingModule {
     @ActivityScope
-    @ContributesAndroidInjector()
+    @ContributesAndroidInjector(modules = MainActivityModule.class)
     MainActivity mainActivity();
 }

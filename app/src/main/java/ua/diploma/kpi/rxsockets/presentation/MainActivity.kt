@@ -1,80 +1,71 @@
 package ua.diploma.kpi.rxsockets.presentation
 
 import android.R
-import android.annotation.SuppressLint
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import ua.diploma.kpi.kotlinrxsockets.socket.createRxSocket
-import ua.diploma.kpi.kotlinrxsockets.socket.use
+import com.jakewharton.rxbinding2.view.RxView
+import dagger.android.support.DaggerAppCompatActivity
+import kotlinx.android.synthetic.main.activity_main.*
+import ua.diploma.kpi.rxsockets.domain.model.TemperatureHumidityData
+import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-class MainActivity : AppCompatActivity() {
-    private val socket = createRxSocket {
-        hostIp = "http://176.36.146.229"
-        port = 9092
-        namespace = "DHT22"
-        options {
-            forceNew = false
-            reconnection = true
-            reconnectionAttempts = 3
-            reconnectionDelay = 1000
-            reconnectionDelayMax = 10000
-            randomizationFactor = 0.3
-            timeout = 5000
-        }
-    }
+class MainActivity : DaggerAppCompatActivity(), MainActivityContract.View {
+    @Inject
+    lateinit var presenter: MainActivityPresenter
 
-    @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        socket.observableOnConnect()
-                .subscribe {
-                    Log.d("TAG", "Socket connected")
-                    socket.sendData("checkLogin", "andrii")
-                    socket.sendData("checkLogin", "dsafsdfasdfasdf")
-                }
+        presenter.model = TemperatureHumidityData(0.0, 0.0)
+        setClickListeners()
+    }
 
-        socket.observableOnConnectError()
-                .subscribe {
-                    Log.d("TAG", "Socket connect error: $it")
-                }
+    override fun onResume() {
+        super.onResume()
+        presenter.bindView(this)
+    }
 
-        socket.observableOnError()
-                .subscribe {
-                    Log.d("TAG", "Socket error: $it")
-                }
-
-        socket.observableOnDisconnect()
-                .subscribe {
-                    Log.d("TAG", "Socket disconnected")
-                }
-
-        socket.observableOn("loginResult", HashMap::class.java)
-                .subscribe {
-                    Log.d("TAG", "Login result: $it")
-                }
-
-        socket.sendData("Diploma", "NTUU KPI")
-
-        socket.sendData("Diploma", "NTUU KPI") {
-            if(it.isNotEmpty()){
-               Log.d("TAG", "Acknowledgement ${it as String}")
-            }
-        }
-
-        socket.use {
-            sendData("Diploma", "NTUU KPI")
-            sendData("Name", "Andrii Chernysh")
-            sendData("Faculty", "Applied Mathematics")
-        }
-
-        socket.connect()
+    override fun onPause() {
+        super.onPause()
+        presenter.unbindView()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        socket.disconnect()
+        presenter.destroy()
+    }
+
+    private fun setClickListeners() {
+        presenter.enableLightObservable(
+                RxView.clicks(btnEnableLight)
+                        .debounce(200L, TimeUnit.MILLISECONDS)
+        )
+
+        presenter.disableLightObservable(
+                RxView.clicks(btnDisableLight)
+                        .debounce(200L, TimeUnit.MILLISECONDS)
+        )
+    }
+
+    override fun showTemperatureHumidity(temperatureHumidityData: TemperatureHumidityData) {
+        tvTemperatureValue.text = temperatureHumidityData.temperature.toString()
+        tvHumidityValue.text = temperatureHumidityData.humidity.toString()
+    }
+
+    override fun showSocketConnected() {
+        tvSocketState.text = getString(R.string.socket_state_connected)
+    }
+
+    override fun showSocketDisconnected() {
+        tvSocketState.text = getString(R.string.socket_state_disconnected)
+    }
+
+    override fun showSocketConnecting() {
+        tvSocketState.text = getString(R.string.socket_state_connecting)
+    }
+
+    override fun showSocketError() {
+        tvSocketState.text = getString(R.string.socket_state_error)
     }
 }
