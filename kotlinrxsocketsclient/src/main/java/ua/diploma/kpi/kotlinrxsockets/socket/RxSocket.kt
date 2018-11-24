@@ -7,6 +7,7 @@ import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.subjects.PublishSubject
 import io.socket.client.IO
 import io.socket.client.Socket
 import io.socket.emitter.Emitter
@@ -14,6 +15,7 @@ import org.reactivestreams.Subscription
 import ua.diploma.kpi.kotlinrxsockets.exception.EmptySocketDataException
 import ua.diploma.kpi.kotlinrxsockets.exception.EventAlreadySubscribedException
 import ua.diploma.kpi.kotlinrxsockets.exception.EventJsonSyntaxException
+import java.io.Closeable
 import java.util.*
 
 /**
@@ -42,12 +44,15 @@ import java.util.*
 class RxSocket(hostIp: String, port: Int,
                namespace: String,
                options: IO.Options? = null,
-               private val gson: Gson) {
+               private val gson: Gson,
+               private val socketLoggingInterceptor: SocketLoggingInterceptor?) : Closeable {
 
     private val socket: Socket
     private val socketEvents = mutableListOf<String>()
     private var compositeDisposable = CompositeDisposable()
     private val compositeSubscription = mutableListOf<Subscription>()
+    private val systemSubjects = mutableMapOf<String, PublishSubject<Any>>()
+
 
     init {
         Log.d("TAG", "Connecting to $hostIp:$port/$namespace")
@@ -56,35 +61,49 @@ class RxSocket(hostIp: String, port: Int,
         } else {
             IO.socket("$hostIp:$port/$namespace", options)
         }
+
+        systemSubjects += SEND_DATA_ERROR to PublishSubject.create()
     }
 
     fun connect() {
         socket.connect()
     }
 
-    fun disconnect() {
+    override fun close() {
         if (socket.connected()) {
             socket.disconnect()
+        }
 
-            if (!compositeDisposable.isDisposed) {
-                compositeDisposable.dispose()
-            }
-            compositeDisposable = CompositeDisposable()
+        if (!compositeDisposable.isDisposed) {
+            compositeDisposable.dispose()
+        }
+        compositeDisposable = CompositeDisposable()
 
-            for (subscription in compositeSubscription) {
-                subscription.cancel()
-            }
-            compositeSubscription.clear()
+        for (subscription in compositeSubscription) {
+            subscription.cancel()
+        }
+        compositeSubscription.clear()
 
-            for (event in socketEvents) {
-                socket.off(event)
-            }
+        for (event in socketEvents) {
+            socket.off(event)
         }
     }
 
-    fun <T> sendData(eventName: String, vararg data: T){
+    fun <T> sendData(eventName: String, vararg data: T) {
         if (socket.connected()) {
             socket.emit(eventName, data);
+        } else {
+            systemSubjects[SEND_DATA_ERROR]!!.onNext(Unit)
+        }
+    }
+
+    fun <T> sendData(eventName: String,
+                     vararg data: T,
+                     acknowledgment: (args: Array<out Any>) -> Unit) {
+        if (socket.connected()) {
+            socket.emit(eventName, data) { acknowledgment(it) }
+        } else {
+            systemSubjects[SEND_DATA_ERROR]!!.onNext(Unit)
         }
     }
 
@@ -114,8 +133,10 @@ class RxSocket(hostIp: String, port: Int,
         }
     }
 
-    private fun <T : Any> getEmitterListener(emitter: io.reactivex.Emitter<T>,
-                                             eventName: String, returnClass: Class<T>) =
+    private fun <T : Any> getEmitterListener(
+            emitter: io.reactivex.Emitter<T>,
+            eventName: String, returnClass: Class<T>) =
+
             Emitter.Listener { args ->
                 if (args == null || args[0] == null) {
                     emitter.onError(EmptySocketDataException(eventName))
@@ -143,6 +164,25 @@ class RxSocket(hostIp: String, port: Int,
     fun observableOnReconnectAttempt() = systemSocketEventObservable(Socket.EVENT_RECONNECT_ATTEMPT)
     fun observableOnReconnectError() = systemSocketEventErrorObservable(Socket.EVENT_RECONNECT_ERROR)
     fun observableOnReconnectFailed() = systemSocketEventObservable(Socket.EVENT_RECONNECT_FAILED)
+    fun observableOnSendDataError() = systemSubjects[SEND_DATA_ERROR]
+
+    fun observableOnGenericEvent() =
+            Observable.merge(listOf(
+                    observableOnConnect().map { RxSocketEvent.CONNECTED },
+                    observableOnConnecting().map { RxSocketEvent.CONNECTING },
+                    observableOnConnectError().map { RxSocketEvent.CONNECT_ERROR },
+                    observableOnConnectTimeout().map { RxSocketEvent.CONNECT_ERROR },
+                    observableOnDisconnect().map { RxSocketEvent.CONNECT_ERROR },
+                    observableOnError().map { RxSocketEvent.CONNECT_ERROR },
+                    observableOnMessage().map { RxSocketEvent.CONNECT_ERROR },
+                    observableOnPing().map { RxSocketEvent.CONNECT_ERROR },
+                    observableOnPong().map { RxSocketEvent.CONNECT_ERROR },
+                    observableOnReconnect().map { RxSocketEvent.CONNECT_ERROR },
+                    observableOnReconnecting().map { RxSocketEvent.CONNECT_ERROR },
+                    observableOnReconnectAttempt().map { RxSocketEvent.CONNECT_ERROR },
+                    observableOnReconnectError().map { RxSocketEvent.CONNECT_ERROR },
+                    observableOnReconnectFailed().map { RxSocketEvent.CONNECT_ERROR },
+                    observableOnSendDataError()?.map { RxSocketEvent.CONNECT_ERROR }))
 
     fun flowableOnConnect(backpressureStrategy: BackpressureStrategy = BackpressureStrategy.DROP) =
             systemSocketEventFlowable(Socket.EVENT_CONNECT, backpressureStrategy)
@@ -186,6 +226,26 @@ class RxSocket(hostIp: String, port: Int,
     fun flowableOnReconnectFailed(backpressureStrategy: BackpressureStrategy = BackpressureStrategy.DROP) =
             systemSocketEventFlowable(Socket.EVENT_RECONNECT_FAILED, backpressureStrategy)
 
+    fun flowableOnSendDataError(backpressureStrategy: BackpressureStrategy = BackpressureStrategy.DROP) =
+            systemSocketEventFlowable(SEND_DATA_ERROR, backpressureStrategy)
+
+    fun flowableOnGenericEvent() =
+            Flowable.merge(listOf(
+                    flowableOnConnect().map { RxSocketEvent.CONNECTED },
+                    flowableOnConnecting().map { RxSocketEvent.CONNECTING },
+                    flowableOnConnectError().map { RxSocketEvent.CONNECT_ERROR },
+                    flowableOnConnectTimeout().map { RxSocketEvent.CONNECT_ERROR },
+                    flowableOnDisconnect().map { RxSocketEvent.CONNECT_ERROR },
+                    flowableOnError().map { RxSocketEvent.CONNECT_ERROR },
+                    flowableOnMessage().map { RxSocketEvent.CONNECT_ERROR },
+                    flowableOnPing().map { RxSocketEvent.CONNECT_ERROR },
+                    flowableOnPong().map { RxSocketEvent.CONNECT_ERROR },
+                    flowableOnReconnect().map { RxSocketEvent.CONNECT_ERROR },
+                    flowableOnReconnecting().map { RxSocketEvent.CONNECT_ERROR },
+                    flowableOnReconnectAttempt().map { RxSocketEvent.CONNECT_ERROR },
+                    flowableOnReconnectError().map { RxSocketEvent.CONNECT_ERROR },
+                    flowableOnReconnectFailed().map { RxSocketEvent.CONNECT_ERROR }))
+
     private fun systemSocketEventObservable(eventName: String): Observable<Unit> {
         checkSubscribedToEvent(eventName)
         return Observable.create<Unit> { emitter ->
@@ -227,8 +287,8 @@ class RxSocket(hostIp: String, port: Int,
                 /*if (args == null) {
                     emitter.onError(EmptySocketDataException(eventName))
                 } else {*/
-                    emitter.onNext(Unit)
-               // }
+                emitter.onNext(Unit)
+                // }
             }
             socket.on(eventName, listener)
             socketEvents.add(eventName)
@@ -261,8 +321,17 @@ class RxSocket(hostIp: String, port: Int,
             throw EventAlreadySubscribedException(event)
         }
     }
+
+    companion object {
+        const val SEND_DATA_ERROR = "Socket.SEND_DATA_ERROR"
+    }
+
 }
 
 fun createRxSocket(block: RxSocketBuilder.() -> Unit) = RxSocketBuilder().apply(block).build()
 
-
+inline fun RxSocket.use(block: RxSocket.() -> Unit) {
+    this.connect()
+    apply(block)
+    this.close()
+}

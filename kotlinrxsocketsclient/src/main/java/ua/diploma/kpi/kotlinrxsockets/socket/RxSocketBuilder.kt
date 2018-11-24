@@ -31,10 +31,11 @@ class RxSocketBuilder{
     var namespace: String = ""
     var options: IO.Options? = null
     var gson: Gson = Gson()
+    var socketLoggingInterceptor: SocketLoggingInterceptor? = null
 
     fun options(block: OptionsBuilder.() -> Unit) {
         options = OptionsBuilder().apply(block).build()
     }
 
-    fun build() = RxSocket(hostIp, port, namespace, options, gson)
+    fun build() = RxSocket(hostIp, port, namespace, options, gson, socketLoggingInterceptor)
 }

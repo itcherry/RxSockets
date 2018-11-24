@@ -1,16 +1,17 @@
-package ua.diploma.kpi.rxsockets
+package ua.diploma.kpi.rxsockets.presentation
 
 import android.R
+import android.annotation.SuppressLint
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import ua.diploma.kpi.kotlinrxsockets.socket.createRxSocket
+import ua.diploma.kpi.kotlinrxsockets.socket.use
 
 class MainActivity : AppCompatActivity() {
     private val socket = createRxSocket {
         hostIp = "http://176.36.146.229"
         port = 9092
-        gson = Gson()
         namespace = "DHT22"
         options {
             forceNew = false
@@ -23,6 +24,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -31,7 +33,6 @@ class MainActivity : AppCompatActivity() {
                 .subscribe {
                     Log.d("TAG", "Socket connected")
                     socket.sendData("checkLogin", "andrii")
-                    socket.sendData("checkLogin", "bzdo")
                     socket.sendData("checkLogin", "dsafsdfasdfasdf")
                 }
 
@@ -56,6 +57,18 @@ class MainActivity : AppCompatActivity() {
                 }
 
         socket.sendData("Diploma", "NTUU KPI")
+
+        socket.sendData("Diploma", "NTUU KPI") {
+            if(it.isNotEmpty()){
+               Log.d("TAG", "Acknowledgement ${it as String}")
+            }
+        }
+
+        socket.use {
+            sendData("Diploma", "NTUU KPI")
+            sendData("Name", "Andrii Chernysh")
+            sendData("Faculty", "Applied Mathematics")
+        }
 
         socket.connect()
     }
