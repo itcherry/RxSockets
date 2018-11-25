@@ -11,6 +11,7 @@ interface MainActivityContract {
         fun showSocketDisconnected()
         fun showSocketConnecting()
         fun showSocketError()
+        fun showSocketReconnecting()
     }
 
     interface Presenter {

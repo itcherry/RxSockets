@@ -8,7 +8,7 @@ import ua.diploma.kpi.rxsockets.domain.model.TemperatureHumidityData
 import ua.diploma.kpi.rxsockets.domain.repository.TemperatureHumidityRepository
 import javax.inject.Inject
 
-class TemperatureHumidityUseCase @Inject constructor(observableTransformer: ObservableTransformer<TemperatureHumidityData, TemperatureHumidityData>,
+class TemperatureHumidityUseCase @Inject constructor(observableTransformer: ObservableTransformer<Any, Any>,
                                                      compositeDisposable: CompositeDisposable ,
                                                      private val temperatureHumidityRepository: TemperatureHumidityRepository):
         ObservableUseCase<TemperatureHumidityData, Unit>(observableTransformer, compositeDisposable){

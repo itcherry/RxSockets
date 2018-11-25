@@ -17,7 +17,8 @@ package ua.diploma.kpi.rxsockets.data.source;
 
 import dagger.Binds;
 import dagger.Module;
-import ua.diploma.kpi.rxsockets.data.network.source.SocketDataSource;
+import ua.diploma.kpi.rxsockets.data.network.source.TemperatureHumiditySocketDataSource;
+import ua.diploma.kpi.rxsockets.di.scope.ApplicationScope;
 
 /**
  * Dagger 2 module to provide different sockets and DB data sources.
@@ -27,5 +28,6 @@ import ua.diploma.kpi.rxsockets.data.network.source.SocketDataSource;
 @Module
 public interface DataSourceModule {
     @Binds
-    SocketDataSource provideTemperatureHumiditySocketDataSource(TemperatureHumidityDataSource dataSource);
+    @ApplicationScope
+    TemperatureHumidityDataSource provideTemperatureHumiditySocketDataSource(TemperatureHumiditySocketDataSource dataSource);
 }

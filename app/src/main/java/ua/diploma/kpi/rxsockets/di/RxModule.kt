@@ -60,8 +60,8 @@ class RxModule {
 
     @ApplicationScope
     @Provides
-    fun provideObservableTransformer(@SchedulerIO ioScheduler: Scheduler, @SchedulerUI uiScheduler: Scheduler): ObservableTransformer<*, *> =
-            ObservableTransformer<Any, Any> {
+    fun provideObservableTransformer(@SchedulerIO ioScheduler: Scheduler, @SchedulerUI uiScheduler: Scheduler): ObservableTransformer<Any, Any> =
+            ObservableTransformer{
                 it.subscribeOn(ioScheduler)
                         .observeOn(uiScheduler)
             }

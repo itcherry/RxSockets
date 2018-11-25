@@ -1,10 +1,10 @@
 package ua.diploma.kpi.rxsockets.presentation
 
-import android.R
 import android.os.Bundle
 import com.jakewharton.rxbinding2.view.RxView
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
+import ua.diploma.kpi.rxsockets.R
 import ua.diploma.kpi.rxsockets.domain.model.TemperatureHumidityData
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -67,5 +67,9 @@ class MainActivity : DaggerAppCompatActivity(), MainActivityContract.View {
 
     override fun showSocketError() {
         tvSocketState.text = getString(R.string.socket_state_error)
+    }
+
+    override fun showSocketReconnecting() {
+        tvSocketState.text = getString(R.string.socket_state_reconnecting)
     }
 }

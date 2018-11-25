@@ -36,7 +36,7 @@ import io.reactivex.observers.DisposableObserver
  *
  * @author Andrii Chernysh. E-mail: itcherry97@gmail.com
  */
-abstract class ObservableUseCase<T, PARAM>(private val mSchedulersTransformer: ObservableTransformer<in T, out T>,
+abstract class ObservableUseCase<T, PARAM>(private val mSchedulersTransformer: ObservableTransformer<Any, Any>,
                                            compositeDisposable: CompositeDisposable) : UseCase(compositeDisposable) {
 
     /**
@@ -53,7 +53,7 @@ abstract class ObservableUseCase<T, PARAM>(private val mSchedulersTransformer: O
             throw NullPointerException(NULL_DISPOSABLE_OBSERVER_MSG)
         }
         val observable = this.buildUseCaseObservable(params)
-                .compose(mSchedulersTransformer)
+                .compose(applySchedulers())
 
         addDisposable(observable.subscribeWith(disposableObserver))
     }
@@ -65,7 +65,7 @@ abstract class ObservableUseCase<T, PARAM>(private val mSchedulersTransformer: O
                 onError: (t: Throwable) -> Unit,
                 onComplete: () -> Unit) {
         val observable = this.buildUseCaseObservable(params)
-                .compose(mSchedulersTransformer)
+                .compose(applySchedulers())
 
         addDisposable(observable.subscribe(onNext, onError, onComplete))
     }
@@ -78,7 +78,7 @@ abstract class ObservableUseCase<T, PARAM>(private val mSchedulersTransformer: O
                 onComplete: () -> Unit,
                 onSubscribe: (t: Disposable) -> Unit) {
         val observable = this.buildUseCaseObservable(params)
-                .compose(mSchedulersTransformer)
+                .compose(applySchedulers())
 
         addDisposable(observable.subscribe(onNext, onError, onComplete, onSubscribe))
     }
@@ -89,7 +89,7 @@ abstract class ObservableUseCase<T, PARAM>(private val mSchedulersTransformer: O
     fun execute(params: PARAM, onNext: (t: T) -> Unit,
                 onError: (t: Throwable) -> Unit) {
         val observable = this.buildUseCaseObservable(params)
-                .compose(mSchedulersTransformer)
+                .compose(applySchedulers())
 
         addDisposable(observable.subscribe(onNext, onError))
     }
@@ -102,7 +102,7 @@ abstract class ObservableUseCase<T, PARAM>(private val mSchedulersTransformer: O
                 doOnNext: (t: T) -> Unit) {
         val observable = this.buildUseCaseObservable(params)
                 .doOnNext(doOnNext)
-                .compose(mSchedulersTransformer)
+                .compose(applySchedulers())
 
         addDisposable(observable.subscribe(onNext, onError))
     }
@@ -112,7 +112,7 @@ abstract class ObservableUseCase<T, PARAM>(private val mSchedulersTransformer: O
      */
     fun execute(params: PARAM, onNext: (t: T) -> Unit) {
         val observable = this.buildUseCaseObservable(params)
-                .compose(mSchedulersTransformer)
+                .compose(applySchedulers())
 
         addDisposable(observable.subscribe(onNext))
     }
@@ -122,8 +122,13 @@ abstract class ObservableUseCase<T, PARAM>(private val mSchedulersTransformer: O
      */
     fun execute(params: PARAM) {
         val observable = this.buildUseCaseObservable(params)
-                .compose(mSchedulersTransformer)
+                .compose(applySchedulers())
 
         addDisposable(observable.subscribe())
+    }
+
+    @SuppressWarnings("unchecked")
+    private fun <S> applySchedulers(): ObservableTransformer<S, S> {
+        return mSchedulersTransformer as ObservableTransformer<S, S>
     }
 }

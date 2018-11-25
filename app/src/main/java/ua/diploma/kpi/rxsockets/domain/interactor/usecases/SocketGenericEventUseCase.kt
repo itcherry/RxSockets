@@ -7,7 +7,7 @@ import ua.diploma.kpi.rxsockets.domain.ObservableUseCase
 import ua.diploma.kpi.rxsockets.domain.repository.TemperatureHumidityRepository
 import javax.inject.Inject
 
-class SocketGenericEventUseCase @Inject constructor(observableTransformer: ObservableTransformer<RxSocketEvent, RxSocketEvent>,
+class SocketGenericEventUseCase @Inject constructor(observableTransformer: ObservableTransformer<Any, Any>,
                                                     compositeDisposable: CompositeDisposable,
                                                     private val temperatureHumidityRepository: TemperatureHumidityRepository):
         ObservableUseCase<RxSocketEvent, Unit>(observableTransformer, compositeDisposable){

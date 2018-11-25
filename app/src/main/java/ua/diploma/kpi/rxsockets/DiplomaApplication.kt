@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatDelegate
 import dagger.android.AndroidInjector
 import dagger.android.support.DaggerApplication
 import timber.log.Timber
+import ua.diploma.kpi.rxsockets.di.component.DaggerAppComponent
 
 class DiplomaApplication: DaggerApplication(){
     override fun onCreate() {

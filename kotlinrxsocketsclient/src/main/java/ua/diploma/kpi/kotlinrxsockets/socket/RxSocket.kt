@@ -139,12 +139,15 @@ class RxSocket(hostIp: String, port: Int,
 
             Emitter.Listener { args ->
                 if (args == null || args[0] == null) {
+                    socketLoggingInterceptor?.logError("RxSocket. Custom event $eventName: an error occurred when receiving data. Empty input args array.")
                     emitter.onError(EmptySocketDataException(eventName))
                 } else {
                     try {
                         val data = gson.fromJson<T>(args[0].toString(), returnClass)
+                        socketLoggingInterceptor?.logInfo("RxSocket. Custom event $eventName. Data: $data")
                         emitter.onNext(data)
                     } catch (e: JsonSyntaxException) {
+                        socketLoggingInterceptor?.logError("RxSocket. Custom event $eventName: an error occurred when receiving data. Json syntax exception. Message: ${e.message}")
                         emitter.onError(EventJsonSyntaxException(eventName, e.message))
                     }
                 }
@@ -250,6 +253,7 @@ class RxSocket(hostIp: String, port: Int,
         checkSubscribedToEvent(eventName)
         return Observable.create<Unit> { emitter ->
             val listener = Emitter.Listener { args ->
+                socketLoggingInterceptor?.logInfo("RxSocket. System event $eventName: has fired")
                 emitter.onNext(Unit)
             }
             socket.on(eventName, listener)
@@ -266,8 +270,10 @@ class RxSocket(hostIp: String, port: Int,
         return Observable.create<String> { emitter ->
             val listener = Emitter.Listener { args ->
                 if (args == null) {
+                    socketLoggingInterceptor?.logError("RxSocket. System error event $eventName: has fired.")
                     emitter.onNext("null");
                 } else {
+                    socketLoggingInterceptor?.logError("RxSocket. System error event $eventName: has fired. Error message: ${Arrays.toString(args)}")
                     emitter.onNext(Arrays.toString(args));
                 }
             }
@@ -287,6 +293,7 @@ class RxSocket(hostIp: String, port: Int,
                 /*if (args == null) {
                     emitter.onError(EmptySocketDataException(eventName))
                 } else {*/
+                socketLoggingInterceptor?.logInfo("RxSocket. System event $eventName: has fired")
                 emitter.onNext(Unit)
                 // }
             }
@@ -303,8 +310,10 @@ class RxSocket(hostIp: String, port: Int,
         return Flowable.create<String>({ emitter ->
             val listener = Emitter.Listener { args ->
                 if (args == null) {
+                    socketLoggingInterceptor?.logError("RxSocket. System error event $eventName: has fired.")
                     emitter.onNext("null");
                 } else {
+                    socketLoggingInterceptor?.logError("RxSocket. System error event $eventName: has fired. Error message: ${Arrays.toString(args)}")
                     emitter.onNext(Arrays.toString(args));
                 }
             }

@@ -23,7 +23,6 @@ import io.reactivex.Observable
 import ua.diploma.kpi.kotlinrxsockets.socket.RxSocket
 import ua.diploma.kpi.kotlinrxsockets.socket.RxSocketEvent
 import ua.diploma.kpi.rxsockets.data.source.SocketDataSource
-import javax.inject.Inject
 
 /**
  * Manager to get entity socket data source.
@@ -31,7 +30,8 @@ import javax.inject.Inject
  *
  * @author Andrii Chernysh. E-mail: itcherry97@gmail.com
  */
-abstract class SocketDataSource @Inject constructor(val rxSocket: RxSocket) : SocketDataSource {
+abstract class SocketDataSource(private val rxSocket: RxSocket) : SocketDataSource {
+
     override fun observableOnConnect() = rxSocket.observableOnConnect()
     override fun observableOnDisconnect() = rxSocket.observableOnDisconnect()
     override fun observableOnReconnect() = rxSocket.observableOnReconnect()
