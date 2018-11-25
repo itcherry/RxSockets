@@ -39,12 +39,13 @@ import ua.diploma.kpi.rxsockets.di.scope.ApplicationScope
 class SocketServiceModule {
     @Provides
     @ApplicationScope
-    fun provideSocket(gson: Gson, loggingInterceptor: SocketLoggingInterceptor): RxSocket {
+    fun provideSocket(gsonProvided: Gson, loggingInterceptor: SocketLoggingInterceptor): RxSocket {
         return createRxSocket {
             hostIp = "http://176.36.81.205"
             port = 9092
             namespace = "raspberry"
             socketLoggingInterceptor = loggingInterceptor
+            gson = gsonProvided
             options {
                 forceNew = false
                 reconnection = true
