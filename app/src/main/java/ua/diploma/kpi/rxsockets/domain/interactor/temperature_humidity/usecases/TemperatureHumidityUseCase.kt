@@ -1,4 +1,4 @@
-package ua.diploma.kpi.rxsockets.domain.interactor.usecases
+package ua.diploma.kpi.rxsockets.domain.interactor.temperature_humidity.usecases
 
 import io.reactivex.ObservableTransformer
 import io.reactivex.disposables.CompositeDisposable

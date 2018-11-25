@@ -19,6 +19,7 @@ import dagger.Binds;
 import dagger.Module;
 import ua.diploma.kpi.rxsockets.data.source.DataSourceModule;
 import ua.diploma.kpi.rxsockets.di.scope.ApplicationScope;
+import ua.diploma.kpi.rxsockets.domain.repository.LightsRepository;
 import ua.diploma.kpi.rxsockets.domain.repository.TemperatureHumidityRepository;
 
 /**
@@ -31,4 +32,8 @@ public interface RepositoryModule {
     @Binds
     @ApplicationScope
     TemperatureHumidityRepository bindTemperatureHumidityRepository(TemperatureHumidityRepositoryImpl temperatureHumidityRepository);
+
+    @Binds
+    @ApplicationScope
+    LightsRepository bindLightsRepository(LightsRepositoryImpl lightsRepository);
 }

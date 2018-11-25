@@ -1,8 +1,8 @@
-package ua.diploma.kpi.rxsockets.domain.interactor
+package ua.diploma.kpi.rxsockets.domain.interactor.temperature_humidity
 
 import ua.diploma.kpi.kotlinrxsockets.socket.RxSocketEvent
-import ua.diploma.kpi.rxsockets.domain.interactor.usecases.SocketGenericEventUseCase
-import ua.diploma.kpi.rxsockets.domain.interactor.usecases.TemperatureHumidityUseCase
+import ua.diploma.kpi.rxsockets.domain.interactor.temperature_humidity.usecases.SocketGenericEventUseCase
+import ua.diploma.kpi.rxsockets.domain.interactor.temperature_humidity.usecases.TemperatureHumidityUseCase
 import ua.diploma.kpi.rxsockets.domain.model.TemperatureHumidityData
 import ua.diploma.kpi.rxsockets.domain.repository.TemperatureHumidityRepository
 import javax.inject.Inject
