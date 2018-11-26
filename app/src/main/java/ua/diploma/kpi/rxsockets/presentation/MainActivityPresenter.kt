@@ -25,7 +25,7 @@ class MainActivityPresenter @Inject constructor(private val temperatureHumidityI
                 RxSocketEvent.CONNECTING -> view()?.showSocketConnecting()
                 RxSocketEvent.DISCONNECTED -> view()?.showSocketDisconnected()
                 RxSocketEvent.RECONNECTING -> view()?.showSocketReconnecting()
-                RxSocketEvent.ERROR, RxSocketEvent.RECONNECT_ERROR -> view()?.showSocketError()
+                RxSocketEvent.ERROR, RxSocketEvent.RECONNECT_ERROR, RxSocketEvent.CONNECT_ERROR -> view()?.showSocketError()
                 else -> {
                 }
             }
@@ -35,6 +35,8 @@ class MainActivityPresenter @Inject constructor(private val temperatureHumidityI
             model = it
             view()?.showTemperatureHumidity(it)
         }
+
+        temperatureHumidityInteractorFacade.connect()
     }
 
     override fun enableLightObservable(clickObservable: Observable<Any>) {

@@ -91,8 +91,11 @@ class RxSocket(hostIp: String, port: Int,
 
     fun <T> sendData(eventName: String, vararg data: T) {
         if (socket.connected()) {
-            socket.emit(eventName, data);
+            socketLoggingInterceptor?.logInfo("RxSocket. Custom event $eventName. Send data: ${Arrays.toString(data)}")
+            socket.emit(eventName, gson.toJson(data))
         } else {
+            socketLoggingInterceptor?.logError("RxSocket. Custom event $eventName." +
+                    " Error while sending data: ${Arrays.toString(data)}. Socket is disconnected.")
             systemSubjects[SEND_DATA_ERROR]!!.onNext(Unit)
         }
     }
@@ -101,8 +104,12 @@ class RxSocket(hostIp: String, port: Int,
                      vararg data: T,
                      acknowledgment: (args: Array<out Any>) -> Unit) {
         if (socket.connected()) {
-            socket.emit(eventName, data) { acknowledgment(it) }
+            socketLoggingInterceptor?.logInfo("RxSocket. Custom event $eventName. Send data with acknowledgement: ${Arrays.toString(data)}")
+            val sendData = data.map { gson.toJson(data) }.toTypedArray()
+            socket.emit(eventName, sendData) { acknowledgment(it) }
         } else {
+            socketLoggingInterceptor?.logError("RxSocket. Custom event $eventName." +
+                    " Error while sending data: ${Arrays.toString(data)} with acknowledgement. Socket is disconnected.")
             systemSubjects[SEND_DATA_ERROR]!!.onNext(Unit)
         }
     }
@@ -139,7 +146,9 @@ class RxSocket(hostIp: String, port: Int,
 
             Emitter.Listener { args ->
                 if (args == null || args[0] == null) {
-                    socketLoggingInterceptor?.logError("RxSocket. Custom event $eventName: an error occurred when receiving data. Empty input args array.")
+                    socketLoggingInterceptor?.logError("RxSocket. " +
+                            "Custom event $eventName: an error occurred when receiving data." +
+                            " Empty input args array.")
                     emitter.onError(EmptySocketDataException(eventName))
                 } else {
                     try {
@@ -147,7 +156,9 @@ class RxSocket(hostIp: String, port: Int,
                         socketLoggingInterceptor?.logInfo("RxSocket. Custom event $eventName. Data: $data")
                         emitter.onNext(data)
                     } catch (e: JsonSyntaxException) {
-                        socketLoggingInterceptor?.logError("RxSocket. Custom event $eventName: an error occurred when receiving data. Json syntax exception. Message: ${e.message}")
+                        socketLoggingInterceptor?.logError("RxSocket." +
+                                " Custom event $eventName: an error occurred when receiving data." +
+                                " Json syntax exception. Message: ${e.message}")
                         emitter.onError(EventJsonSyntaxException(eventName, e.message))
                     }
                 }
@@ -174,18 +185,18 @@ class RxSocket(hostIp: String, port: Int,
                     observableOnConnect().map { RxSocketEvent.CONNECTED },
                     observableOnConnecting().map { RxSocketEvent.CONNECTING },
                     observableOnConnectError().map { RxSocketEvent.CONNECT_ERROR },
-                    observableOnConnectTimeout().map { RxSocketEvent.CONNECT_ERROR },
-                    observableOnDisconnect().map { RxSocketEvent.CONNECT_ERROR },
-                    observableOnError().map { RxSocketEvent.CONNECT_ERROR },
-                    observableOnMessage().map { RxSocketEvent.CONNECT_ERROR },
-                    observableOnPing().map { RxSocketEvent.CONNECT_ERROR },
-                    observableOnPong().map { RxSocketEvent.CONNECT_ERROR },
-                    observableOnReconnect().map { RxSocketEvent.CONNECT_ERROR },
-                    observableOnReconnecting().map { RxSocketEvent.CONNECT_ERROR },
-                    observableOnReconnectAttempt().map { RxSocketEvent.CONNECT_ERROR },
-                    observableOnReconnectError().map { RxSocketEvent.CONNECT_ERROR },
-                    observableOnReconnectFailed().map { RxSocketEvent.CONNECT_ERROR },
-                    observableOnSendDataError()?.map { RxSocketEvent.CONNECT_ERROR }))
+                    observableOnConnectTimeout().map { RxSocketEvent.CONNECT_TIMEOUT },
+                    observableOnDisconnect().map { RxSocketEvent.DISCONNECTED },
+                    observableOnError().map { RxSocketEvent.ERROR },
+                    observableOnMessage().map { RxSocketEvent.MESSAGE },
+                    observableOnPing().map { RxSocketEvent.PING },
+                    observableOnPong().map { RxSocketEvent.PONG },
+                    observableOnReconnect().map { RxSocketEvent.RECONNECTED },
+                    observableOnReconnecting().map { RxSocketEvent.RECONNECTING },
+                    observableOnReconnectAttempt().map { RxSocketEvent.RECONNECT_ATTEMPT },
+                    observableOnReconnectError().map { RxSocketEvent.RECONNECT_ERROR },
+                    observableOnReconnectFailed().map { RxSocketEvent.RECONNECT_FAILED },
+                    observableOnSendDataError()?.map { RxSocketEvent.SEND_DATA_ERROR }))
 
     fun flowableOnConnect(backpressureStrategy: BackpressureStrategy = BackpressureStrategy.DROP) =
             systemSocketEventFlowable(Socket.EVENT_CONNECT, backpressureStrategy)
@@ -237,17 +248,17 @@ class RxSocket(hostIp: String, port: Int,
                     flowableOnConnect().map { RxSocketEvent.CONNECTED },
                     flowableOnConnecting().map { RxSocketEvent.CONNECTING },
                     flowableOnConnectError().map { RxSocketEvent.CONNECT_ERROR },
-                    flowableOnConnectTimeout().map { RxSocketEvent.CONNECT_ERROR },
-                    flowableOnDisconnect().map { RxSocketEvent.CONNECT_ERROR },
-                    flowableOnError().map { RxSocketEvent.CONNECT_ERROR },
-                    flowableOnMessage().map { RxSocketEvent.CONNECT_ERROR },
-                    flowableOnPing().map { RxSocketEvent.CONNECT_ERROR },
-                    flowableOnPong().map { RxSocketEvent.CONNECT_ERROR },
-                    flowableOnReconnect().map { RxSocketEvent.CONNECT_ERROR },
-                    flowableOnReconnecting().map { RxSocketEvent.CONNECT_ERROR },
-                    flowableOnReconnectAttempt().map { RxSocketEvent.CONNECT_ERROR },
-                    flowableOnReconnectError().map { RxSocketEvent.CONNECT_ERROR },
-                    flowableOnReconnectFailed().map { RxSocketEvent.CONNECT_ERROR }))
+                    flowableOnConnectTimeout().map { RxSocketEvent.CONNECT_TIMEOUT },
+                    flowableOnDisconnect().map { RxSocketEvent.DISCONNECTED },
+                    flowableOnError().map { RxSocketEvent.ERROR },
+                    flowableOnMessage().map { RxSocketEvent.MESSAGE },
+                    flowableOnPing().map { RxSocketEvent.PING },
+                    flowableOnPong().map { RxSocketEvent.PONG },
+                    flowableOnReconnect().map { RxSocketEvent.RECONNECTED },
+                    flowableOnReconnecting().map { RxSocketEvent.RECONNECTING },
+                    flowableOnReconnectAttempt().map { RxSocketEvent.RECONNECT_ATTEMPT },
+                    flowableOnReconnectError().map { RxSocketEvent.RECONNECT_ERROR },
+                    flowableOnReconnectFailed().map { RxSocketEvent.RECONNECT_FAILED }))
 
     private fun systemSocketEventObservable(eventName: String): Observable<Unit> {
         checkSubscribedToEvent(eventName)
@@ -270,10 +281,12 @@ class RxSocket(hostIp: String, port: Int,
         return Observable.create<String> { emitter ->
             val listener = Emitter.Listener { args ->
                 if (args == null) {
-                    socketLoggingInterceptor?.logError("RxSocket. System error event $eventName: has fired.")
+                    socketLoggingInterceptor?.logError("RxSocket. " +
+                            "System error event $eventName: has fired.")
                     emitter.onNext("null");
                 } else {
-                    socketLoggingInterceptor?.logError("RxSocket. System error event $eventName: has fired. Error message: ${Arrays.toString(args)}")
+                    socketLoggingInterceptor?.logError("RxSocket. " +
+                            "System error event $eventName: has fired. Error message: ${Arrays.toString(args)}")
                     emitter.onNext(Arrays.toString(args));
                 }
             }
@@ -313,7 +326,8 @@ class RxSocket(hostIp: String, port: Int,
                     socketLoggingInterceptor?.logError("RxSocket. System error event $eventName: has fired.")
                     emitter.onNext("null");
                 } else {
-                    socketLoggingInterceptor?.logError("RxSocket. System error event $eventName: has fired. Error message: ${Arrays.toString(args)}")
+                    socketLoggingInterceptor?.logError("RxSocket. System error event $eventName: has fired." +
+                            " Error message: ${Arrays.toString(args)}")
                     emitter.onNext(Arrays.toString(args));
                 }
             }

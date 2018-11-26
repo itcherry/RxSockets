@@ -18,6 +18,7 @@ class MainActivity : DaggerAppCompatActivity(), MainActivityContract.View {
         setContentView(R.layout.activity_main)
 
         presenter.model = TemperatureHumidityData(0.0, 0.0)
+        presenter.initSockets()
         setClickListeners()
     }
 
