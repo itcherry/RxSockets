@@ -15,6 +15,7 @@ import org.reactivestreams.Subscription
 import ua.diploma.kpi.kotlinrxsockets.exception.EmptySocketDataException
 import ua.diploma.kpi.kotlinrxsockets.exception.EventAlreadySubscribedException
 import ua.diploma.kpi.kotlinrxsockets.exception.EventJsonSyntaxException
+import ua.diploma.kpi.kotlinrxsockets.socket.RxSocketEvent.*
 import java.io.Closeable
 import java.util.*
 
@@ -181,22 +182,22 @@ class RxSocket(hostIp: String, port: Int,
     fun observableOnSendDataError() = systemSubjects[SEND_DATA_ERROR]
 
     fun observableOnGenericEvent() =
-            Observable.merge(listOf(
-                    observableOnConnect().map { RxSocketEvent.CONNECTED },
-                    observableOnConnecting().map { RxSocketEvent.CONNECTING },
-                    observableOnConnectError().map { RxSocketEvent.CONNECT_ERROR },
-                    observableOnConnectTimeout().map { RxSocketEvent.CONNECT_TIMEOUT },
-                    observableOnDisconnect().map { RxSocketEvent.DISCONNECTED },
-                    observableOnError().map { RxSocketEvent.ERROR },
-                    observableOnMessage().map { RxSocketEvent.MESSAGE },
-                    observableOnPing().map { RxSocketEvent.PING },
-                    observableOnPong().map { RxSocketEvent.PONG },
-                    observableOnReconnect().map { RxSocketEvent.RECONNECTED },
-                    observableOnReconnecting().map { RxSocketEvent.RECONNECTING },
-                    observableOnReconnectAttempt().map { RxSocketEvent.RECONNECT_ATTEMPT },
-                    observableOnReconnectError().map { RxSocketEvent.RECONNECT_ERROR },
-                    observableOnReconnectFailed().map { RxSocketEvent.RECONNECT_FAILED },
-                    observableOnSendDataError()?.map { RxSocketEvent.SEND_DATA_ERROR }))
+        Observable.merge(listOf(
+            observableOnConnect().map { CONNECTED },
+            observableOnConnecting().map { CONNECTING },
+            observableOnConnectError().map { CONNECT_ERROR },
+            observableOnConnectTimeout().map { CONNECT_TIMEOUT },
+            observableOnDisconnect().map { DISCONNECTED },
+            observableOnError().map { ERROR },
+            observableOnMessage().map { MESSAGE },
+            observableOnPing().map { PING },
+            observableOnPong().map { PONG },
+            observableOnReconnect().map { RECONNECTED },
+            observableOnReconnecting().map { RECONNECTING },
+            observableOnReconnectAttempt().map { RECONNECT_ATTEMPT },
+            observableOnReconnectError().map { RECONNECT_ERROR },
+            observableOnReconnectFailed().map { RECONNECT_FAILED },
+            observableOnSendDataError()?.map { RxSocketEvent.SEND_DATA_ERROR }))
 
     fun flowableOnConnect(backpressureStrategy: BackpressureStrategy = BackpressureStrategy.DROP) =
             systemSocketEventFlowable(Socket.EVENT_CONNECT, backpressureStrategy)
@@ -245,7 +246,7 @@ class RxSocket(hostIp: String, port: Int,
 
     fun flowableOnGenericEvent() =
             Flowable.merge(listOf(
-                    flowableOnConnect().map { RxSocketEvent.CONNECTED },
+                    flowableOnConnect().map { CONNECTED },
                     flowableOnConnecting().map { RxSocketEvent.CONNECTING },
                     flowableOnConnectError().map { RxSocketEvent.CONNECT_ERROR },
                     flowableOnConnectTimeout().map { RxSocketEvent.CONNECT_TIMEOUT },
