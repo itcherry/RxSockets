@@ -41,7 +41,7 @@ class SocketServiceModule {
     @ApplicationScope
     fun provideSocket(gsonProvided: Gson, loggingInterceptor: SocketLoggingInterceptor): RxSocket {
         return createRxSocket {
-            hostIp = "http://176.36.81.205"
+            hostIp = "http://192.168.43.206"
             port = 9092
             namespace = "raspberry"
             socketLoggingInterceptor = loggingInterceptor
