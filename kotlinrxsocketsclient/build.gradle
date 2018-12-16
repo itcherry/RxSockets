@@ -1,5 +1,34 @@
+apply plugin: 'com.novoda.bintray-release'
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'maven-publish'
+
+publish {
+    def groupProjectID = 'ua.andrii.chernysh'
+    def artifactProjectID = 'kotlinrxsocket'
+    def publishVersionID = '1.0.0'
+
+    userOrg = 'itcherry'
+    repoName = 'KotlinRxSocket'
+    groupId = groupProjectID
+    artifactId = artifactProjectID
+    publishVersion = publishVersionID
+    desc = 'Android library based on Socket.IO to simplify sockets implementation with RxJava.'
+    website = 'https://github.com/itcherry/RxSockets'
+
+    publishing {
+        publications {
+            MyPub(MavenPublication) {
+                groupId groupProjectID
+                artifactId artifactProjectID
+                version publishVersionID
+                artifact bundleReleaseAar
+            }
+        }
+    }
+
+    publications = ['MyPub']
+}
 
 android {
     compileSdkVersion 28
@@ -32,9 +61,7 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'com.squareup.okhttp3:okhttp:3.11.0'
     implementation('io.socket:socket.io-client:0.9.0') {
-        // excluding org.json which is provided by Android
         exclude group: 'org.json', module: 'json'
     }
     implementation 'io.reactivex.rxjava2:rxjava:2.1.16'
