@@ -20,7 +20,5 @@ package ua.diploma.kpi.kotlinrxsockets.socket
  * Class that describes socket event
  *
  * @author Andrii Chernysh. E-mail: itcherry97@gmail.com
- *         Developed by <u>Transcendensoft</u>
  */
-data class SocketEvent(val eventName: String) {
-}
+data class SocketEvent(val eventName: String)

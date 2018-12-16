@@ -22,7 +22,6 @@ import io.socket.client.IO
  * Builder for IO.Options for creating pretty DSL
  *
  * @author Andrii Chernysh. E-mail: itcherry97@gmail.com
- *         Developed by <u>Transcendensoft</u>
  */
 class OptionsBuilder {
     var forceNew: Boolean = false
@@ -46,10 +45,7 @@ class OptionsBuilder {
         options.reconnectionDelayMax = reconnectionDelayMax
         options.timeout = timeout
         options.randomizationFactor = randomizationFactor
-        /*options.transports = arrayOf("websocket")*/
-        /*                        ...                       */
-        /* Встановлення всіх визначених полів класу Options */
-        /*                        ...                       */
+
         return options
     }
 }

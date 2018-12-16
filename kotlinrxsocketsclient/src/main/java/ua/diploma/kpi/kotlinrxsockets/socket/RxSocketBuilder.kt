@@ -23,7 +23,6 @@ import io.socket.client.IO
  * Builder for RxSocket for creating pretty DSL
  *
  * @author Andrii Chernysh. E-mail: itcherry97@gmail.com
- *         Developed by <u>Transcendensoft</u>
  */
 class RxSocketBuilder{
     var hostIp: String = "PLEASE_SET_HOST_IP_AND_PORT"

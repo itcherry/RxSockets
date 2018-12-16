@@ -40,7 +40,6 @@ import java.util.*
  * Base RX socket client
  *
  * @author Andrii Chernysh. E-mail: itcherry97@gmail.com
- *         Developed by <u>KPI student</u>
  */
 class RxSocket(hostIp: String, port: Int,
                namespace: String,
@@ -304,12 +303,8 @@ class RxSocket(hostIp: String, port: Int,
         checkSubscribedToEvent(eventName)
         return Flowable.create<Unit>({ emitter ->
             val listener = Emitter.Listener { _ ->
-                /*if (args == null) {
-                    emitter.onError(EmptySocketDataException(eventName))
-                } else {*/
                 socketLoggingInterceptor?.logInfo("RxSocket. System event $eventName: has fired")
                 emitter.onNext(Unit)
-                // }
             }
             socket.on(eventName, listener)
             socketEvents.add(eventName)
