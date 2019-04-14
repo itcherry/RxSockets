@@ -39,12 +39,6 @@ captures/
 # Keystore files
 *.jks
 
-
 # User-specific folders
-.idea
-
-.DS_Store
-
-# Fastlane
-/fastlane/report.xml
-/fastlane/README.md
+.idea/
+.DS_Store/
