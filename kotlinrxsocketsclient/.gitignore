@@ -41,7 +41,7 @@ captures/
 
 
 # User-specific folders
-.idea
+.idea/
 
 .DS_Store
 
