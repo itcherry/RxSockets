@@ -1,19 +1,17 @@
-package ua.diploma.kpi.kotlinrxsockets.socket
+package com.itcherry.kotlinrxsockets.socket
 
-import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import io.reactivex.*
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.internal.subscriptions.ArrayCompositeSubscription
 import io.socket.client.IO
 import io.socket.client.Socket
 import io.socket.emitter.Emitter
 import org.reactivestreams.Subscription
-import ua.diploma.kpi.kotlinrxsockets.exception.EmptySocketDataException
-import ua.diploma.kpi.kotlinrxsockets.exception.EventAlreadySubscribedException
-import ua.diploma.kpi.kotlinrxsockets.exception.EventJsonSyntaxException
+import com.itcherry.kotlinrxsockets.exception.EmptySocketDataException
+import com.itcherry.kotlinrxsockets.exception.EventAlreadySubscribedException
+import com.itcherry.kotlinrxsockets.exception.EventJsonSyntaxException
 import java.util.*
 
 /**
@@ -50,7 +48,6 @@ class RxSocket(hostIp: String, port: Int,
     private val compositeSubscription = mutableListOf<Subscription>()
 
     init {
-        Log.d("TAG", "Connecting to $hostIp:$port/$namespace")
         socket = if (options == null) {
             IO.socket("$hostIp:$port/$namespace")
         } else {

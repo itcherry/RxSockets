@@ -1,4 +1,4 @@
-package ua.diploma.kpi.kotlinrxsockets.exception
+package com.itcherry.kotlinrxsockets.exception
 
 import java.lang.RuntimeException
 

@@ -1,17 +1,24 @@
-package ua.diploma.kpi.rxsockets
+package com.itcherry.rxsockets
 
+import android.annotation.SuppressLint
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import ua.diploma.kpi.kotlinrxsockets.socket.createRxSocket
+import com.itcherry.kotlinrxsockets.socket.createRxSocket
 
 class MainActivity : AppCompatActivity() {
     private val socket = createRxSocket {
-        hostIp = "http://176.36.146.229"
-        port = 9092
-        namespace = "login"
+      hostIp = "http://176.36.146.229"
+      port = 9092
+      namespace = "login"
+      options {
+        reconnection = true
+        reconnectionAttempts = 3
+        forceNew = true
+      }
     }
 
+    @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

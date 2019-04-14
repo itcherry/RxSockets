@@ -1,4 +1,7 @@
-package ua.diploma.kpi.kotlinrxsockets.socket
+package com.itcherry.kotlinrxsockets.socket
+
+import com.google.gson.Gson
+import io.socket.client.IO
 
 /**
  * Copyright 2018. Andrii Chernysh
@@ -17,10 +20,21 @@ package ua.diploma.kpi.kotlinrxsockets.socket
  *
  */
 /**
- * Class that describes socket event
+ * Builder for RxSocket for creating pretty DSL
  *
  * @author Andrii Chernysh. E-mail: itcherry97@gmail.com
  *         Developed by <u>Transcendensoft</u>
  */
-data class SocketEvent(val eventName: String) {
+class RxSocketBuilder{
+    var hostIp: String = "PLEASE_SET_HOST_IP_AND_PORT"
+    var port: Int = 0
+    var namespace: String = ""
+    var options: IO.Options? = null
+    var gson: Gson = Gson()
+
+    fun options(block: OptionsBuilder.() -> Unit) {
+        options = OptionsBuilder().apply(block).build()
+    }
+
+    fun build() = RxSocket(hostIp, port, namespace, options, gson)
 }

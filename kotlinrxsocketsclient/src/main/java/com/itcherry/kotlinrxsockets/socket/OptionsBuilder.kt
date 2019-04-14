@@ -1,4 +1,4 @@
-package ua.diploma.kpi.kotlinrxsockets.socket
+package com.itcherry.kotlinrxsockets.socket
 
 import io.socket.client.IO
 
@@ -25,7 +25,7 @@ import io.socket.client.IO
  *         Developed by <u>Transcendensoft</u>
  */
 class OptionsBuilder {
-    var mutiplex: Boolean = true
+    var multiplex: Boolean = true
     var forceNew: Boolean = false
     var query: String = ""
     var reconnection: Boolean = true
@@ -36,7 +36,7 @@ class OptionsBuilder {
 
     fun build(): IO.Options {
         val options = IO.Options()
-        options.multiplex = mutiplex
+        options.multiplex = multiplex
         options.forceNew = forceNew
         options.query = query
         options.reconnection = reconnection
