@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">RxSockets</string>
+    <string name="title1">Example of using RxSocket library with IoT project</string>
+    <string name="title2">Transfer data between server and client via RxSocket. </string>
+    <string name="btn_enable_light">Enable light</string>
+    <string name="btn_disable_light">Disable Light</string>
+
+    <string name="socket_state_connected">Connection initiated</string>
+    <string name="socket_state_connecting">Connecting&#8230;</string>
+    <string name="socket_state_reconnecting">Reconnecting</string>
+    <string name="socket_state_disconnected">Disconnected</string>
+    <string name="socket_state_error">Connection error</string>
 </resources>
