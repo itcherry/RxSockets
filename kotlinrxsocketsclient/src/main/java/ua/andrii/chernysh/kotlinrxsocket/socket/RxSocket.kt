@@ -48,11 +48,12 @@ class RxSocket(hostIp: String, port: Int,
                private val socketLoggingInterceptor: SocketLoggingInterceptor?) : Closeable {
 
     private val socket: Socket
-    private val socketEvents = mutableListOf<String>()
-    private var compositeDisposable = CompositeDisposable()
-    private val compositeSubscription = mutableListOf<Subscription>()
-    private val systemSubjects = mutableMapOf<String, PublishSubject<Any>>()
-
+    private val socketEvents = mutableListOf<String>()                // Names of events
+    private var compositeDisposable = CompositeDisposable()           // For observable
+    private val compositeSubscription = mutableListOf<Subscription>() // For flowable
+    private val systemSubjects = mutableMapOf<String, PublishSubject<Any>>() // For SENDING system messages
+    private val observables = hashMapOf<String, Observable<*>>()
+    private val flowables = hashMapOf<String, Flowable<*>>()
 
     init {
         Log.d("TAG", "Connecting to $hostIp:$port/$namespace")
@@ -116,28 +117,36 @@ class RxSocket(hostIp: String, port: Int,
 
     fun <T : Any> flowableOn(eventName: String, returnClass: Class<T>,
                              backpressureStrategy: BackpressureStrategy = BackpressureStrategy.DROP): Flowable<T> {
-        checkSubscribedToEvent(eventName)
-        return Flowable.create<T>({ emitter ->
-            val listener = getEmitterListener<T>(emitter, eventName, returnClass)
-            socket.on(eventName, listener)
-            socketEvents.add(eventName)
-        }, backpressureStrategy)
-                .doOnSubscribe {
-                    compositeSubscription.add(it)
-                }
+        val flowable = flowables.getOrElse(eventName) {
+            Flowable.create<T>({ emitter ->
+                val listener = getEmitterListener<T>(emitter, eventName, returnClass)
+                socket.on(eventName, listener)
+                socketEvents.add(eventName)
+            }, backpressureStrategy)
+                    .doOnSubscribe {
+                        compositeSubscription.add(it)
+                    }
+        }
+        flowables[eventName] = flowable
+
+        return flowable as Flowable<T>
     }
 
     fun <T : Any> observableOn(eventName: String, returnClass: Class<T>): Observable<T> {
-        checkSubscribedToEvent(eventName)
-        return Observable.create<T> { emitter ->
-            val listener = getEmitterListener<T>(emitter, eventName, returnClass)
-            socket.on(eventName, listener)
-            socketEvents.add(eventName)
-        }.doOnSubscribe {
-            if (!it.isDisposed) {
-                compositeDisposable.add(it)
+        val observable = observables.getOrElse(eventName) {
+            Observable.create<T> { emitter ->
+                val listener = getEmitterListener<T>(emitter, eventName, returnClass)
+                socket.on(eventName, listener)
+                socketEvents.add(eventName)
+            }.doOnSubscribe {
+                if (!it.isDisposed) {
+                    compositeDisposable.add(it)
+                }
             }
         }
+        observables[eventName] = observable
+
+        return observable as Observable<T>
     }
 
     private fun <T : Any> getEmitterListener(
@@ -181,22 +190,22 @@ class RxSocket(hostIp: String, port: Int,
     fun observableOnSendDataError() = systemSubjects[SEND_DATA_ERROR]
 
     fun observableOnGenericEvent() =
-        Observable.merge(listOf(
-            observableOnConnect().map { CONNECTED },
-            observableOnConnecting().map { CONNECTING },
-            observableOnConnectError().map { CONNECT_ERROR },
-            observableOnConnectTimeout().map { CONNECT_TIMEOUT },
-            observableOnDisconnect().map { DISCONNECTED },
-            observableOnError().map { ERROR },
-            observableOnMessage().map { MESSAGE },
-            observableOnPing().map { PING },
-            observableOnPong().map { PONG },
-            observableOnReconnect().map { RECONNECTED },
-            observableOnReconnecting().map { RECONNECTING },
-            observableOnReconnectAttempt().map { RECONNECT_ATTEMPT },
-            observableOnReconnectError().map { RECONNECT_ERROR },
-            observableOnReconnectFailed().map { RECONNECT_FAILED },
-            observableOnSendDataError()?.map { RxSocketEvent.SEND_DATA_ERROR }))
+            Observable.merge(listOf(
+                    observableOnConnect().map { CONNECTED },
+                    observableOnConnecting().map { CONNECTING },
+                    observableOnConnectError().map { CONNECT_ERROR },
+                    observableOnConnectTimeout().map { CONNECT_TIMEOUT },
+                    observableOnDisconnect().map { DISCONNECTED },
+                    observableOnError().map { ERROR },
+                    observableOnMessage().map { MESSAGE },
+                    observableOnPing().map { PING },
+                    observableOnPong().map { PONG },
+                    observableOnReconnect().map { RECONNECTED },
+                    observableOnReconnecting().map { RECONNECTING },
+                    observableOnReconnectAttempt().map { RECONNECT_ATTEMPT },
+                    observableOnReconnectError().map { RECONNECT_ERROR },
+                    observableOnReconnectFailed().map { RECONNECT_FAILED },
+                    observableOnSendDataError()?.map { RxSocketEvent.SEND_DATA_ERROR }))
 
     fun flowableOnConnect(backpressureStrategy: BackpressureStrategy = BackpressureStrategy.DROP) =
             systemSocketEventFlowable(Socket.EVENT_CONNECT, backpressureStrategy)
@@ -246,105 +255,113 @@ class RxSocket(hostIp: String, port: Int,
     fun flowableOnGenericEvent() =
             Flowable.merge(listOf(
                     flowableOnConnect().map { CONNECTED },
-                    flowableOnConnecting().map { RxSocketEvent.CONNECTING },
-                    flowableOnConnectError().map { RxSocketEvent.CONNECT_ERROR },
-                    flowableOnConnectTimeout().map { RxSocketEvent.CONNECT_TIMEOUT },
-                    flowableOnDisconnect().map { RxSocketEvent.DISCONNECTED },
-                    flowableOnError().map { RxSocketEvent.ERROR },
-                    flowableOnMessage().map { RxSocketEvent.MESSAGE },
-                    flowableOnPing().map { RxSocketEvent.PING },
-                    flowableOnPong().map { RxSocketEvent.PONG },
-                    flowableOnReconnect().map { RxSocketEvent.RECONNECTED },
-                    flowableOnReconnecting().map { RxSocketEvent.RECONNECTING },
-                    flowableOnReconnectAttempt().map { RxSocketEvent.RECONNECT_ATTEMPT },
-                    flowableOnReconnectError().map { RxSocketEvent.RECONNECT_ERROR },
-                    flowableOnReconnectFailed().map { RxSocketEvent.RECONNECT_FAILED }))
+                    flowableOnConnecting().map { CONNECTING },
+                    flowableOnConnectError().map { CONNECT_ERROR },
+                    flowableOnConnectTimeout().map { CONNECT_TIMEOUT },
+                    flowableOnDisconnect().map { DISCONNECTED },
+                    flowableOnError().map { ERROR },
+                    flowableOnMessage().map { MESSAGE },
+                    flowableOnPing().map { PING },
+                    flowableOnPong().map { PONG },
+                    flowableOnReconnect().map { RECONNECTED },
+                    flowableOnReconnecting().map { RECONNECTING },
+                    flowableOnReconnectAttempt().map { RECONNECT_ATTEMPT },
+                    flowableOnReconnectError().map { RECONNECT_ERROR },
+                    flowableOnReconnectFailed().map { RECONNECT_FAILED }))
 
     private fun systemSocketEventObservable(eventName: String): Observable<Unit> {
-        checkSubscribedToEvent(eventName)
-        return Observable.create<Unit> { emitter ->
-            val listener = Emitter.Listener { args ->
-                socketLoggingInterceptor?.logInfo("RxSocket. System event $eventName: has fired")
-                emitter.onNext(Unit)
-            }
-            socket.on(eventName, listener)
-            socketEvents.add(eventName)
-        }.doOnSubscribe {
-            if (!it.isDisposed) {
-                compositeDisposable.add(it)
+        val observable = observables.getOrElse(eventName) {
+            Observable.create<Unit> { emitter ->
+                val listener = Emitter.Listener { args ->
+                    socketLoggingInterceptor?.logInfo("RxSocket. System event $eventName: has fired")
+                    emitter.onNext(Unit)
+                }
+                socket.on(eventName, listener)
+                socketEvents.add(eventName)
+            }.doOnSubscribe {
+                if (!it.isDisposed) {
+                    compositeDisposable.add(it)
+                }
             }
         }
+        observables[eventName] = observable
+        return observable as Observable<Unit>
     }
 
     private fun systemSocketEventErrorObservable(eventName: String): Observable<String> {
-        checkSubscribedToEvent(eventName)
-        return Observable.create<String> { emitter ->
-            val listener = Emitter.Listener { args ->
-                if (args == null) {
-                    socketLoggingInterceptor?.logError("RxSocket. " +
-                            "System error event $eventName: has fired.")
-                    emitter.onNext("null");
-                } else {
-                    socketLoggingInterceptor?.logError("RxSocket. " +
-                            "System error event $eventName: has fired. Error message: ${Arrays.toString(args)}")
-                    emitter.onNext(Arrays.toString(args));
+        val observable = observables.getOrElse(eventName) {
+            Observable.create<String> { emitter ->
+                val listener = Emitter.Listener { args ->
+                    if (args == null) {
+                        socketLoggingInterceptor?.logError("RxSocket. " +
+                                "System error event $eventName: has fired.")
+                        emitter.onNext("null");
+                    } else {
+                        socketLoggingInterceptor?.logError("RxSocket. " +
+                                "System error event $eventName: has fired. Error message: ${Arrays.toString(args)}")
+                        emitter.onNext(Arrays.toString(args));
+                    }
+                }
+                socket.on(eventName, listener)
+                socketEvents.add(eventName)
+            }.doOnSubscribe {
+                if (!it.isDisposed) {
+                    compositeDisposable.add(it)
                 }
             }
-            socket.on(eventName, listener)
-            socketEvents.add(eventName)
-        }.doOnSubscribe {
-            if (!it.isDisposed) {
-                compositeDisposable.add(it)
-            }
         }
+        observables[eventName] = observable
+
+        return observable as Observable<String>
     }
 
     private fun systemSocketEventFlowable(eventName: String, backpressureStrategy: BackpressureStrategy): Flowable<Unit> {
-        checkSubscribedToEvent(eventName)
-        return Flowable.create<Unit>({ emitter ->
-            val listener = Emitter.Listener { _ ->
-                socketLoggingInterceptor?.logInfo("RxSocket. System event $eventName: has fired")
-                emitter.onNext(Unit)
-            }
-            socket.on(eventName, listener)
-            socketEvents.add(eventName)
-        }, backpressureStrategy)
-                .doOnSubscribe {
-                    compositeSubscription.add(it)
+        val flowable = flowables.getOrElse(eventName) {
+            Flowable.create<Unit>({ emitter ->
+                val listener = Emitter.Listener { _ ->
+                    socketLoggingInterceptor?.logInfo("RxSocket. System event $eventName: has fired")
+                    emitter.onNext(Unit)
                 }
+                socket.on(eventName, listener)
+                socketEvents.add(eventName)
+            }, backpressureStrategy)
+                    .doOnSubscribe {
+                        compositeSubscription.add(it)
+                    }
+        }
+        flowables[eventName] = flowable
+
+        return flowable as Flowable<Unit>
     }
 
     private fun systemSocketEventErrorFlowable(eventName: String, backpressureStrategy: BackpressureStrategy): Flowable<String> {
-        checkSubscribedToEvent(eventName)
-        return Flowable.create<String>({ emitter ->
-            val listener = Emitter.Listener { args ->
-                if (args == null) {
-                    socketLoggingInterceptor?.logError("RxSocket. System error event $eventName: has fired.")
-                    emitter.onNext("null");
-                } else {
-                    socketLoggingInterceptor?.logError("RxSocket. System error event $eventName: has fired." +
-                            " Error message: ${Arrays.toString(args)}")
-                    emitter.onNext(Arrays.toString(args));
+        val flowable = flowables.getOrElse(eventName) {
+            Flowable.create<String>({ emitter ->
+                val listener = Emitter.Listener { args ->
+                    if (args == null) {
+                        socketLoggingInterceptor?.logError("RxSocket. System error event $eventName: has fired.")
+                        emitter.onNext("null");
+                    } else {
+                        socketLoggingInterceptor?.logError("RxSocket. System error event $eventName: has fired." +
+                                " Error message: ${Arrays.toString(args)}")
+                        emitter.onNext(Arrays.toString(args));
+                    }
                 }
-            }
-            socket.on(eventName, listener)
-            socketEvents.add(eventName)
-        }, backpressureStrategy)
-                .doOnSubscribe {
-                    compositeSubscription.add(it)
-                }
-    }
-
-    private fun checkSubscribedToEvent(event: String) {
-        if (socketEvents.contains(event)) {
-            throw EventAlreadySubscribedException(event)
+                socket.on(eventName, listener)
+                socketEvents.add(eventName)
+            }, backpressureStrategy)
+                    .doOnSubscribe {
+                        compositeSubscription.add(it)
+                    }
         }
+        flowables[eventName] = flowable
+
+        return flowable as Flowable<String>
     }
 
     companion object {
         const val SEND_DATA_ERROR = "Socket.SEND_DATA_ERROR"
     }
-
 }
 
 fun createRxSocket(block: RxSocketBuilder.() -> Unit) = RxSocketBuilder().apply(block).build()
